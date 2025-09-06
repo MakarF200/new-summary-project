@@ -1,5 +1,7 @@
 import { NewsItem, CategoryInfo } from "@/types";
 
+
+// 首页分类列表
 export const categories: CategoryInfo[] = [
   {
     id: "politics",
@@ -51,6 +53,7 @@ export const categories: CategoryInfo[] = [
   },
 ];
 
+// 首页新闻列表
 export const mockNews: NewsItem[] = [
   {
     id: "1",

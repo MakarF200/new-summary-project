@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL("https://your-domain.com"),
+  metadataBase: new URL("https://antiquenews.xyz"),
   alternates: {
     canonical: "/",
   },
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     title: "新闻摘要 - 快速了解每日重要新闻",
     description:
       "专业的新闻摘要服务，为您提供最新、最准确的新闻要点，让您在短时间内了解世界动态。",
-    url: "https://your-domain.com",
+    url: "https://antiquenews.xyz",
     siteName: "新闻摘要",
     locale: "zh_CN",
     type: "website",
@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     },
   },
   verification: {
-    google: "your-google-verification-code",
+    google: "antiquenews-xyz",
   },
 };
 
