@@ -1,4 +1,6 @@
 import dayjs from "dayjs";
+import { NewsCardItem, NewsDetail } from "@/types/apiTypes";
+import { NewsCategory, CategoryInfo } from "@/types";
 
 // API 基础配置
 export const API_CONFIG = {
@@ -8,6 +10,16 @@ export const API_CONFIG = {
     "Content-Type": "application/json",
   },
 };
+
+// API 响应数据结构
+export interface NewsListResponse {
+  data: NewsCardItem[];
+  nextCursor: string | null;
+  prevCursor: string | null;
+  hasMore: boolean;
+}
+
+export type SearchResponse = NewsListResponse;
 
 // API 请求封装
 class ApiClient {
@@ -45,98 +57,70 @@ class ApiClient {
     }
   }
 
-  // 获取新闻列表（按日期分页）
-  async getNewsByDate(params: {
-    date: string; // YYYY-MM-DD 格式
-    page?: number; // 页码，默认 1
-    pageSize?: number; // 每页数量，默认 10
-    category?: string; // 分类筛选，可选
-  }) {
-    const searchParams = new URLSearchParams({
-      date: params.date,
-      page: (params.page || 1).toString(),
-      pageSize: (params.pageSize || 10).toString(),
-      ...(params.category && { category: params.category }),
-    });
+  /**
+   * 获取首页新闻流（无限瀑布流）
+   * 用于：首页无限滚动加载，返回精简的新闻卡片数据
+   */
+  async getNewsList(params: {
+    date?: string; // 筛选指定日期新闻（YYYY-MM-DD格式，默认当天）
+    cursor?: string; // 分页游标（上一次请求返回的最后一条 cursor）
+    limit?: number; // 单次获取数量（默认10）
+    category?: NewsCategory; // 分类筛选（可选）
+  }): Promise<NewsListResponse> {
+    const searchParams = new URLSearchParams();
 
-    return this.request<NewsResponse>(`/news/date?${searchParams}`);
+    if (params.date) searchParams.set("date", params.date);
+    if (params.cursor) searchParams.set("cursor", params.cursor);
+    if (params.limit) searchParams.set("limit", params.limit.toString());
+    if (params.category) searchParams.set("category", params.category);
+
+    return this.request<NewsListResponse>(`/news?${searchParams}`);
   }
 
-  // 获取新闻详情
-  async getNewsById(id: string) {
-    return this.request<NewsItem>(`/news/${id}`);
+  /**
+   * 获取新闻详情
+   * 用于：用户点击新闻卡片时获取完整的新闻内容
+   */
+  async getNewsDetail(id: string): Promise<NewsDetail> {
+    return this.request<NewsDetail>(`/news/${id}`);
   }
 
-  // 搜索新闻
+  /**
+   * 搜索新闻
+   * 用于：高级搜索页面，按关键词在标题/摘要/标签中搜索
+   */
   async searchNews(params: {
-    query: string;
-    page?: number;
-    pageSize?: number;
-    category?: string;
-    dateFrom?: string;
-    dateTo?: string;
-  }) {
+    query: string; // 搜索关键词
+    cursor?: string; // 分页游标
+    limit?: number; // 单次获取数量（默认10）
+    category?: NewsCategory; // 分类筛选（可选）
+    dateFrom?: string; // 开始日期（YYYY-MM-DD格式）
+    dateTo?: string; // 结束日期（YYYY-MM-DD格式）
+  }): Promise<SearchResponse> {
     const searchParams = new URLSearchParams({
       q: params.query,
-      page: (params.page || 1).toString(),
-      pageSize: (params.pageSize || 10).toString(),
-      ...(params.category && { category: params.category }),
-      ...(params.dateFrom && { dateFrom: params.dateFrom }),
-      ...(params.dateTo && { dateTo: params.dateTo }),
+      limit: (params.limit || 10).toString(),
     });
 
-    return this.request<NewsResponse>(`/news/search?${searchParams}`);
+    if (params.cursor) searchParams.set("cursor", params.cursor);
+    if (params.category) searchParams.set("category", params.category);
+    if (params.dateFrom) searchParams.set("dateFrom", params.dateFrom);
+    if (params.dateTo) searchParams.set("dateTo", params.dateTo);
+
+    return this.request<SearchResponse>(`/news/search?${searchParams}`);
   }
 
-  // 获取分类列表
-  async getCategories() {
+  /**
+   * 获取新闻分类列表
+   * 用于：分类选择器、导航菜单
+   */
+  async getCategories(): Promise<CategoryInfo[]> {
     return this.request<CategoryInfo[]>("/categories");
   }
 }
 
 // 创建 API 客户端实例
 export const apiClient = new ApiClient(API_CONFIG.baseURL);
-
-// 类型定义（从 types/index.ts 导入）
-export interface NewsItem {
-  id: string;
-  title: string;
-  summary: string;
-  content: string;
-  category: NewsCategory;
-  source: string;
-  publishedAt: string;
-  imageUrl?: string;
-  url: string;
-  tags: string[];
-  readTime: number;
-}
-
-export type NewsCategory =
-  | "politics"
-  | "economy"
-  | "technology"
-  | "sports"
-  | "entertainment"
-  | "health"
-  | "science"
-  | "world";
-
-export interface CategoryInfo {
-  id: NewsCategory;
-  name: string;
-  description: string;
-  color: string;
-}
-
-export interface NewsResponse {
-  news: NewsItem[];
-  total: number;
-  page: number;
-  pageSize: number;
-  hasMore: boolean;
-  date: string;
-}
 
 // 工具函数
 export const dateUtils = {

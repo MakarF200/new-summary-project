@@ -38,9 +38,18 @@
 **功能**:
 
 - Logo 展示
-- 导航菜单（首页、关于我们）
+- 集成搜索框（桌面端和移动端）
+- 导航菜单（首页、高级搜索、关于我们）
 - 移动端响应式菜单
 - 固定置顶效果
+
+**Props**:
+
+```typescript
+interface HeaderProps {
+  onSearch?: (query: string) => void; // 搜索回调函数
+}
+```
 
 **使用场景**: 所有页面都会使用此组件
 
@@ -161,7 +170,20 @@ interface LoadingSpinnerProps {
 - 联系方式展示
 - 感谢用户支持
 
-### 2. 新闻详情 (`app/news/[id]/page.tsx`)
+### 2. 高级搜索 (`app/search-plus/page.tsx`)
+
+**作用**: 高级搜索功能页面
+
+**功能**:
+
+- 关键词搜索
+- 分类筛选
+- 日期范围选择
+- 排序方式设置
+- 搜索结果展示
+- 重置搜索条件
+
+### 3. 新闻详情 (`app/news/[id]/page.tsx`)
 
 **作用**: 单条新闻的详细内容页面
 
@@ -172,7 +194,7 @@ interface LoadingSpinnerProps {
 - 相关新闻推荐
 - 分享功能
 
-### 3. 404 页面 (`app/not-found.tsx`)
+### 4. 404 页面 (`app/not-found.tsx`)
 
 **作用**: 页面未找到时的错误页面
 
@@ -312,6 +334,56 @@ mockNewsByDate;
 ---
 
 ## 🎨 样式和布局
+
+### 毛玻璃效果工具类
+
+项目提供了多种毛玻璃效果工具类，可以在任何组件中使用：
+
+#### 基础毛玻璃效果
+
+```css
+.glass {
+  background: rgba(255, 255, 255, 0.66);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+```
+
+#### 透明度变体
+
+- `.glass-light` - 浅色毛玻璃 (80% 不透明度)
+- `.glass-medium` - 中等毛玻璃 (66% 不透明度)
+- `.glass-dark` - 深色毛玻璃 (40% 不透明度)
+
+#### 增强效果
+
+- `.glass-border` - 毛玻璃 + 半透明边框
+- `.glass-shadow` - 毛玻璃 + 深度阴影
+
+#### 使用示例
+
+```tsx
+// 基础使用
+<div className="glass rounded-lg p-4">
+  毛玻璃内容
+</div>
+
+// 带边框的毛玻璃
+<div className="glass-border rounded-lg p-4">
+  带边框的毛玻璃内容
+</div>
+
+// 带阴影的毛玻璃
+<div className="glass-shadow rounded-lg p-4">
+  带阴影的毛玻璃内容
+</div>
+```
+
+#### 深色主题支持
+
+所有毛玻璃效果都自动支持深色主题，会根据系统主题自动调整背景色。
+
+---
 
 ### 设计原则
 

@@ -6,7 +6,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "clean": "rm -rf .next",
+    "clean:all": "rm -rf .next node_modules pnpm-lock.yaml",
+    "clean:cache": "pnpm store prune && pnpm cache clean --force",
+    "fresh": "pnpm run clean:all && pnpm install && pnpm run dev",
+    "dev:clean": "pnpm run clean && pnpm run dev",
+    "dev:port": "next dev -p 3001",
+    "kill:port": "lsof -ti:3000 | xargs kill -9 || true"
   },
   "dependencies": {
     "@headlessui/react": "^2.0.0",

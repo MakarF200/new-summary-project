@@ -1,190 +1,164 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useInView } from "react-intersection-observer";
+import { useState, Suspense } from "react";
 import { Header } from "@/components/Header";
-import { SearchBar } from "@/components/SearchBar";
+import { CategoryFilterBar } from "@/components/CategoryFilterBar";
 import { DateHeader } from "@/components/DateHeader";
-import { NewsCard } from "@/components/NewsCard";
+import { VirtualNewsList } from "@/components/VirtualNewsList";
 import { EmptyState } from "@/components/EmptyState";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
-import { useNewsStore } from "@/stores/newsStore";
-import { dateUtils, NewsItem, NewsResponse } from "@/lib/api";
-import { getNewsByDate } from "@/lib/mockDataExtended";
+import { useNewsStream } from "@/hooks/useNewsStream";
 
-export default function HomePage() {
+function HomePageContent() {
   const [searchQuery, setSearchQuery] = useState("");
 
-  // 无限滚动监听
-  const { ref: loadMoreRef, inView } = useInView({
-    threshold: 0,
-    rootMargin: "400px", // 提前 400px 触发加载
-  });
-
-  // 状态管理
-  const { currentDate, isLoading, error, setCurrentDate, clearError } =
-    useNewsStore();
-
-  // 当前日期的新闻数据（使用 mock 数据）
-  const [currentNews, setCurrentNews] = useState<NewsItem[]>([]);
-  const [allDatesData, setAllDatesData] = useState<{
-    [date: string]: NewsResponse;
-  }>({});
-  const [loadedDates, setLoadedDates] = useState<string[]>([]);
-
-  // 加载当前日期的新闻
-  const loadCurrentDateNews = (date: string, page: number = 1) => {
-    const newsData = getNewsByDate(date, page, 10);
-
-    if (page === 1) {
-      setCurrentNews(newsData.news);
-      setAllDatesData((prev) => ({
-        ...prev,
-        [date]: newsData,
-      }));
-      if (!loadedDates.includes(date)) {
-        setLoadedDates((prev) => [...prev, date]);
-      }
-    } else {
-      // 追加更多数据
-      setCurrentNews((prev) => [...prev, ...newsData.news]);
-      setAllDatesData((prev) => ({
-        ...prev,
-        [date]: {
-          ...prev[date],
-          news: [...(prev[date]?.news || []), ...newsData.news],
-          hasMore: newsData.hasMore,
-          page: page,
-        },
-      }));
-    }
-
-    return newsData;
-  };
-
-  // 加载下一天的数据
-  const loadNextDay = () => {
-    const lastLoadedDate = loadedDates[loadedDates.length - 1] || currentDate;
-    const nextDate = dateUtils.getPreviousDay(lastLoadedDate);
-
-    const newsData = loadCurrentDateNews(nextDate, 1);
-
-    // 如果有数据，将其追加到当前新闻列表
-    if (newsData.news.length > 0) {
-      setCurrentNews((prev) => [...prev, ...newsData.news]);
-    }
-  };
-
-  // 初始化加载今天的数据
-  useEffect(() => {
-    const today = dateUtils.getToday();
-    setCurrentDate(today);
-    loadCurrentDateNews(today);
-  }, [setCurrentDate]); // 只依赖 setCurrentDate
-
-  // 无限滚动触发
-  useEffect(() => {
-    if (inView && !isLoading) {
-      const currentDateData = allDatesData[currentDate];
-
-      if (currentDateData?.hasMore) {
-        // 当前日期还有更多数据，加载下一页
-        const nextPage = (currentDateData.page || 1) + 1;
-        loadCurrentDateNews(currentDate, nextPage);
-      } else {
-        // 当前日期没有更多数据，加载下一天
-        loadNextDay();
-      }
-    }
-  }, [inView, isLoading]); // 移除 currentDate 和 allDatesData 避免循环依赖
+  // 使用新的 news stream hook
+  const {
+    news,
+    currentDate,
+    selectedCategory,
+    isLoading,
+    hasMore,
+    loadedDates,
+    error,
+    loadMore,
+    setCategory,
+    refresh,
+    clearError,
+  } = useNewsStream();
 
   // 搜索处理
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    // TODO: 实现搜索逻辑
   };
 
-  // 过滤新闻（如果有搜索查询）
+  // 过滤新闻（搜索 + 分类）
   const filteredNews = searchQuery
-    ? currentNews.filter(
-        (news) =>
-          news.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          news.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          news.tags.some((tag: string) =>
+    ? news.filter(
+        (newsItem) =>
+          newsItem.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          newsItem.summary.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          newsItem.tags.some((tag) =>
             tag.toLowerCase().includes(searchQuery.toLowerCase())
           )
       )
-    : currentNews;
+    : news;
+
+  // 计算统计信息
+  const totalNewsEstimate = loadedDates.length * 15; // 每天预估15条新闻
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <Header />
+    <div className="min-h-screen bg-gray-50">
+      {/* Header - 置顶 */}
+      <Header onSearch={handleSearch} />
 
-      {/* 搜索区域 */}
-      <div className="bg-white border-b">
-        <div className="container mx-auto px-4 py-6">
-          <SearchBar onSearch={handleSearch} />
-        </div>
-      </div>
-
-      {/* 日期吸附区域 */}
+      {/* 日期吸附条 - 随滚动自动更新 */}
       <DateHeader
         currentDate={currentDate}
+        loadedDates={loadedDates}
+        currentNewsCount={filteredNews.length}
+        totalNewsCount={totalNewsEstimate}
         isSticky={true}
         onDateClick={() => {
           // TODO: 实现日期选择器
-          console.log("Open date picker");
+          console.log("Open date picker for:", currentDate);
         }}
       />
 
-      {/* 新闻内容区域 */}
-      <div className="container mx-auto px-4 py-6">
+      {/* 主内容区域 */}
+      <div className="relative">
         {/* 错误状态 */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-800">{error}</p>
-            <button
-              onClick={clearError}
-              className="mt-2 text-red-600 hover:text-red-800 underline"
-            >
-              重试
-            </button>
+          <div className="container mx-auto px-4 py-4">
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-800">{error}</p>
+              <div className="mt-2 space-x-2">
+                <button
+                  onClick={refresh}
+                  className="text-red-600 hover:text-red-800 underline"
+                >
+                  重试
+                </button>
+                <button
+                  onClick={clearError}
+                  className="text-red-600 hover:text-red-800 underline"
+                >
+                  忽略
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* 新闻网格 */}
+        {/* 新闻流 */}
         {filteredNews.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredNews.map((news) => (
-              <NewsCard key={news.id} news={news} />
-            ))}
-          </div>
+          <VirtualNewsList
+            news={filteredNews}
+            onLoadMore={loadMore}
+            isLoading={isLoading}
+            hasMore={hasMore}
+          />
         ) : (
-          !isLoading && (
-            <EmptyState
-              date={currentDate}
-              message={searchQuery ? "未找到相关新闻" : "暂无新闻"}
-            />
-          )
+          <div className="container mx-auto px-4 py-12">
+            {isLoading ? (
+              <LoadingSpinner message="正在加载新闻..." />
+            ) : (
+              <EmptyState
+                date={currentDate}
+                message={
+                  searchQuery
+                    ? `没有找到包含 "${searchQuery}" 的新闻`
+                    : selectedCategory !== "all"
+                    ? `${selectedCategory} 分类暂无新闻`
+                    : "暂无新闻"
+                }
+              />
+            )}
+          </div>
         )}
 
-        {/* 加载更多触发区域 */}
-        <div ref={loadMoreRef} className="mt-8">
-          {isLoading && <LoadingSpinner message="加载更多新闻..." />}
-        </div>
+        {/* 回到顶部按钮 */}
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          className="fixed bottom-6 right-6 z-40 p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+          aria-label="回到顶部"
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M5 10l7-7m0 0l7 7m-7-7v18"
+            />
+          </svg>
+        </button>
 
-        {/* 显示已加载数量 */}
-        {filteredNews.length > 0 && (
-          <div className="mt-8 text-center">
-            <p className="text-gray-600">
-              已显示 {filteredNews.length} 条新闻
-              {loadedDates.length > 1 && (
-                <span> · 跨越 {loadedDates.length} 天</span>
-              )}
-            </p>
+        {/* 开发调试信息 */}
+        {process.env.NODE_ENV === "development" && (
+          <div className="fixed bottom-6 left-6 z-40 p-3 bg-black/80 text-white text-xs rounded-lg max-w-xs">
+            <div>当前日期: {currentDate}</div>
+            <div>已加载: {news.length} 条新闻</div>
+            <div>跨越: {loadedDates.length} 天</div>
+            <div>分类: {selectedCategory}</div>
+            <div>搜索: {searchQuery || "无"}</div>
+            <div>加载中: {isLoading ? "是" : "否"}</div>
+            <div>还有更多: {hasMore ? "是" : "否"}</div>
           </div>
         )}
       </div>
-    </main>
+    </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={<LoadingSpinner message="正在初始化..." />}>
+      <HomePageContent />
+    </Suspense>
   );
 }
