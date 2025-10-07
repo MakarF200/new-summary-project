@@ -24,6 +24,8 @@
 
 ## 📁 项目结构
 
+// 正在重构中(╹ڡ╹ )
+
 ```
 new-summary-project/
 ├── app/                    # Next.js App Router
@@ -47,32 +49,6 @@ new-summary-project/
 ├── types/                  # TypeScript类型定义
 │   └── index.ts
 └── public/                 # 静态资源
-```
-
-## 🚀 快速开始
-
-### 安装依赖
-
-```bash
-npm install
-```
-
-### 开发模式
-
-```bash
-npm run dev
-```
-
-### 构建生产版本
-
-```bash
-npm run build
-```
-
-### 启动生产服务器
-
-```bash
-npm start
 ```
 
 ## 🔍 SEO 特性
@@ -101,31 +77,6 @@ npm start
 - 一致的设计语言
 - 优雅的动画过渡效果
 
-## 🔧 自定义配置
-
-### 修改网站信息
-
-在 `app/layout.tsx` 中修改 metadata 配置：
-
-```typescript
-export const metadata: Metadata = {
-  title: {
-    default: "你的网站标题",
-    template: "%s | 你的网站名称",
-  },
-  description: "你的网站描述",
-  // ... 其他配置
-};
-```
-
-### 添加新的新闻分类
-
-在 `types/index.ts` 中扩展 NewsCategory 类型，并在 `lib/mockData.ts` 中添加对应的分类信息。
-
-### 修改样式主题
-
-在 `tailwind.config.ts` 中自定义颜色、字体等样式配置。
-
 ## 📈 性能优化
 
 - 图片自动优化和 WebP 格式支持
@@ -134,35 +85,13 @@ export const metadata: Metadata = {
 - 缓存策略优化
 - 字体优化和预加载
 
-## 🌐 部署
-
-### Vercel 部署（推荐）
-
-1. 将代码推送到 GitHub
-2. 在 Vercel 中导入项目
-3. 自动部署完成
-
-### 其他平台
-
-支持部署到任何支持 Node.js 的平台，如：
-
-- Netlify
-- Railway
-- DigitalOcean App Platform
-- AWS Amplify
-
 ## 🤝 贡献
 
 欢迎提交 Issue 和 Pull Request 来改进项目！
-
-## 📄 许可证
-
-MIT License
 
 ## 📞 联系我们
 
 如有问题或建议，请通过以下方式联系：
 
-- 邮箱: your-email@example.com
-- 网站: https://your-domain.com
-- GitHub: https://github.com/your-username/new-summary
+- 邮箱: wuyunyuf404@gmail.com
+- 网站: https://www.makar.xin
