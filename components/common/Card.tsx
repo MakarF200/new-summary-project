@@ -3,7 +3,9 @@ export default function Card() {
     <>
       <div className="rounded-lg bg-gray-200 p-6 shadow-sm border-2 border-gray-300 w-full h-full">
         <div className="flex flex-col items-center justify-center">
-          <img src="https://picsum.photos/200/300" alt="card image" />
+          <div className="w-full aspect-16/9">
+            <img src="https://picsum.photos/200/300" alt="card image" />
+          </div>
           <h2 className="text-center text-2xl font-bold -translate-x-0.5">
             is a card title
           </h2>
