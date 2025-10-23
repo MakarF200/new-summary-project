@@ -5,17 +5,12 @@ import { NewsCategory } from "./index";
  * 用于：首页无限瀑布流 + 虚拟列表渲染
  */
 export interface NewsCardItem {
-  id: string; // 唯一标识符（cursor 主体部分）
   title: string; // 新闻标题
   summary: string; // 卡片的简短摘要（50-80字）
   imageUrl: string; // 封面图 URL
   publishedAt: string; // 发布时间（ISO 格式）
   category: NewsCategory; // 归属的分类（用于筛选和样式）
   cursor: string; // 游标（分页用，例如 timestamp+id）
-  pageInfo: {
-    nextCursor: string; // 下一页游标（更旧的新闻）
-    prevCursor: string; // 上一页游标（更新的新闻）
-  };
 }
 
 /**
