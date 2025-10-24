@@ -1,4 +1,3 @@
-import Card from "@/components/common/Card";
 import CardForm from "@/components/common/CardForm";
 
 export default function CardPage() {
